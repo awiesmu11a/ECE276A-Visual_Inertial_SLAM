@@ -1,8 +1,10 @@
 import numpy as np
 from pr3_utils import *
+from analysis import *
 import scipy.linalg as la
+import sys
 
-def calc_H(pose_mean, pose_inverse, feature_estimate, landmark_estimate, K_s, cam_T_imu):
+def calc_H(pose_inverse, feature_estimate, landmark_estimate, K_s, cam_T_imu):
 
     P = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0]])
     H = np.zeros((4 * feature_estimate.shape[1], 6 + 3 * feature_estimate.shape[1]))
@@ -50,15 +52,20 @@ def update(pose_mean, landmark_mean, covariance, z, noise_obs_cov, K_s, cam_T_im
 
     feature_estimate = projection((cam_T_imu @ pose_inverse @ feature_estimate).T).T
 
-    H = calc_H(pose_mean, pose_inverse, feature_estimate, landmark_estimate, K_s, cam_T_imu)
+    H = calc_H(pose_inverse, feature_estimate, landmark_estimate, K_s, cam_T_imu)
 
     feature_estimate = K_s @ feature_estimate
     z_cap = feature_estimate.flatten('F')
     innovation = z - z_cap
 
+    if is_Singular(H @ covariance @ H.T + noise_obs_cov):
+        print("Singular Matrix in EKF update")
+        sys.exit()
+    
     Kalman_gain = covariance @ H.T @ np.linalg.inv(H @ covariance @ H.T + noise_obs_cov)
+
     pose_mean = pose_mean @ twist2pose(axangle2twist(Kalman_gain[:6, :] @ innovation))
-    landmark_mean = landmark_mean + Kalman_gain[6:, :] @ innovation
-    covariance = (np.eye(6 + 3 * landmark_estimate.shape[1]) - Kalman_gain @ H) @ covariance
+    landmark_mean = landmark_mean + (Kalman_gain[6:, :] @ innovation)
+    covariance = (np.eye(6 + 3 * landmark_estimate.shape[1]) - (Kalman_gain @ H)) @ covariance
 
     return pose_mean, landmark_mean, covariance

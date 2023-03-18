@@ -36,7 +36,7 @@ def load_data(file_name):
     return t,features,linear_velocity,angular_velocity,K,b,imu_T_cam
 
 
-def visualize_trajectory_2d(pose, m2_x, m2_y, m_x, m_y, path_name="Unknown", show_ori=False):
+def visualize_trajectory_2d(pose, landmarks_x, landmarks_y, Title="Figure", path_name="Unknown",show_ori=False):
     '''
     function to visualize the trajectory in 2D
     Input:
@@ -47,8 +47,7 @@ def visualize_trajectory_2d(pose, m2_x, m2_y, m_x, m_y, path_name="Unknown", sho
     fig,ax = plt.subplots(figsize=(5,5))
     n_pose = pose.shape[2]
     ax.plot(pose[0,3,:],pose[1,3,:],'r-',label=path_name)
-    ax.scatter(m_x,m_y,marker='x',label="landmarks", s=0.1)
-    ax.scatter(m2_x,m2_y,marker='.',label="landmarks", s=0.1)
+    ax.scatter(landmarks_x, landmarks_y ,marker='x',label="landmarks", s=0.1)
     ax.scatter(pose[0,3,0],pose[1,3,0],marker='s',label="start")
     ax.scatter(pose[0,3,-1],pose[1,3,-1],marker='o',label="end")
   
@@ -71,6 +70,7 @@ def visualize_trajectory_2d(pose, m2_x, m2_y, m_x, m_y, path_name="Unknown", sho
     ax.axis('equal')
     ax.grid(False)
     ax.legend()
+    ax.set_title(Title)
     plt.show(block=True)
 
     return fig, ax
@@ -220,9 +220,3 @@ def pose2adpose(T):
   calT[...,3:,:3] = np.zeros(T.shape[:-2]+(3,3))
   calT[...,3:,3:] = T[...,:3,:3]
   return calT
-
-
-
-
-
-
