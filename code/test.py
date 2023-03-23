@@ -91,10 +91,11 @@ def find_H(T, cam_T_imu, estimate, K_s):
 	
 	return H
 
-def mapping_update(landmark_og, landmark_mean, landmark_cov, features, feature_id, cam_T_imu, K_s, T_inverse):
+def mapping_update(landmark_og, landmark_mean_og, landmark_cov, features, feature_id, cam_T_imu, K_s, T_inverse):
 
     landmark_og = landmark_og[feature_id, :]
     RMSE = []
+    landmark_mean = landmark_mean_og
 
     for i in range(features.shape[2]):
 
@@ -116,7 +117,7 @@ def mapping_update(landmark_og, landmark_mean, landmark_cov, features, feature_i
         
         features_obs = features_obs[:, observed]
         
-        noise_obs_cov = np.eye(4 * observed.shape[0]) * 1e-1
+        noise_obs_cov = np.eye(4 * observed.shape[0]) * 1
         noise_obs = np.random.multivariate_normal(np.zeros(4 * observed.shape[0]), noise_obs_cov)
 
         z = features_obs.flatten('F') + noise_obs

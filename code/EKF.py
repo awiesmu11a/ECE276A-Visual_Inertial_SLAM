@@ -26,10 +26,10 @@ def calc_H(pose_inverse, feature_estimate, landmark_estimate, K_s, cam_T_imu):
 
 def prediction(pose_mean, covariance, noise_motion_cov, u, dt):
 
-    u_hat = axangle2twist(u)
+    u_hat = axangle2twist(u.T)
     u_hat = dt * u_hat
 
-    u_curly_hat = axangle2adtwist(u)
+    u_curly_hat = axangle2adtwist(u.T)
     u_curly_hat = -dt * u_curly_hat
     F = la.expm(u_curly_hat)
 

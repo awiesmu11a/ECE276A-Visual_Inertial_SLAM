@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
 	# Number of features to scaled down
 	# Feature id with below mentioned multiple will be selected
-	feature_multiple = 2
+	feature_multiple = 3
 
 	initial_pose = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
 
@@ -37,14 +37,14 @@ if __name__ == '__main__':
 	landmark_mean = landmark_og[feature_id, :].flatten('C')
 	
 	covariance = np.eye(3 * features_eff + 6)
-	init_cov_pose = 1
-	init_cov_landmark = 1
+	init_cov_pose = 5
+	init_cov_landmark = 5
 	covariance[:6, :6] = np.eye(6) * init_cov_pose
 	covariance[6:, 6:] = np.eye(3 * features_eff) * init_cov_landmark
 
 	
 	landmark_cov = covariance[6:, 6:]
-
+	"""
 	mapping_time = time.time()
 
 	landmark_mapping_update, RMSE_landmarks = mapping_update(landmark_og, landmark_mean, landmark_cov, features, feature_id, imu_flip @ cam_T_imu, K_s, T_inverse)
@@ -57,7 +57,7 @@ if __name__ == '__main__':
 	plt.close
 
 	plot(dead_reckon_plot, landmark_mapping_update, "Dead Reckon", "Dead_Reckon with Mapping Update Landmarks")
-
+	"""
 	pose_pred_step = []
 	pose_update_step = []
 
@@ -101,11 +101,11 @@ if __name__ == '__main__':
 				covariance_obs[6 + k * 3: 6 + (k + 1) * 3, 6 + j * 3: 6 + (j + 1) * 3] = covariance[6 + observed[k] * 3: 6 + (observed[k] + 1) * 3, 6 + observed[j] * 3: 6 + (observed[j] + 1) * 3]
 		
 		u = np.concatenate((linear_velocity[:, i], angular_velocity[:, i]))
-		noise_motion_cov = np.eye(6) * 1e-1
+		noise_motion_cov = np.eye(6) * 1
 
 		pose_mean, covarinace_obs = prediction(pose_mean, covariance_obs, noise_motion_cov, u, dt)
 
-		noise_obs_cov = np.eye(4 * observed.shape[0]) * 1e-2
+		noise_obs_cov = np.eye(4 * observed.shape[0]) * 10
 		noise_obs = np.random.multivariate_normal(np.zeros(4 * observed.shape[0]), noise_obs_cov)
 
 		z = features_obs.flatten('F') + noise_obs
