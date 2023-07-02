@@ -58,11 +58,7 @@ def update(pose_mean, landmark_mean, covariance, z, noise_obs_cov, K_s, cam_T_im
     z_cap = feature_estimate.flatten('F')
     innovation = z - z_cap
 
-    if is_Singular(H @ covariance @ H.T + noise_obs_cov):
-        print("Singular Matrix in EKF update")
-        sys.exit()
-    
-    Kalman_gain = covariance @ H.T @ np.linalg.inv(H @ covariance @ H.T + noise_obs_cov)
+    Kalman_gain = covariance @ H.T @ np.linalg.pinv(H @ covariance @ H.T + noise_obs_cov)
 
     pose_mean = pose_mean @ twist2pose(axangle2twist(Kalman_gain[:6, :] @ innovation))
     landmark_mean = landmark_mean + (Kalman_gain[6:, :] @ innovation)

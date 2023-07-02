@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
 	# Number of features to scaled down
 	# Feature id with below mentioned multiple will be selected
-	feature_multiple = 3
+	feature_multiple = 10
 
 	initial_pose = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
 
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
 	print("Time taken for Dead reckon and Landmark Groundtruth: ", time.time() - preprocess_time)
 
-	#plot(dead_reckon_plot, landmark_og, "Dead Reckon", "Dead_Reckon with Ground Truth Landmarks")
+	plot(dead_reckon_plot, landmark_og, "Dead Reckon", "Dead_Reckon with Ground Truth Landmarks")
 
 	pose_mean = initial_pose
 	landmark_mean = landmark_og[feature_id, :].flatten('C')
@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
 	
 	landmark_cov = covariance[6:, 6:]
-	"""
+	
 	mapping_time = time.time()
 
 	landmark_mapping_update, RMSE_landmarks = mapping_update(landmark_og, landmark_mean, landmark_cov, features, feature_id, imu_flip @ cam_T_imu, K_s, T_inverse)
@@ -57,7 +57,7 @@ if __name__ == '__main__':
 	plt.close
 
 	plot(dead_reckon_plot, landmark_mapping_update, "Dead Reckon", "Dead_Reckon with Mapping Update Landmarks")
-	"""
+	
 	pose_pred_step = []
 	pose_update_step = []
 
@@ -101,11 +101,11 @@ if __name__ == '__main__':
 				covariance_obs[6 + k * 3: 6 + (k + 1) * 3, 6 + j * 3: 6 + (j + 1) * 3] = covariance[6 + observed[k] * 3: 6 + (observed[k] + 1) * 3, 6 + observed[j] * 3: 6 + (observed[j] + 1) * 3]
 		
 		u = np.concatenate((linear_velocity[:, i], angular_velocity[:, i]))
-		noise_motion_cov = np.eye(6) * 1
+		noise_motion_cov = np.eye(6) * 1e-1
 
 		pose_mean, covarinace_obs = prediction(pose_mean, covariance_obs, noise_motion_cov, u, dt)
 
-		noise_obs_cov = np.eye(4 * observed.shape[0]) * 10
+		noise_obs_cov = np.eye(4 * observed.shape[0]) * 1e-1
 		noise_obs = np.random.multivariate_normal(np.zeros(4 * observed.shape[0]), noise_obs_cov)
 
 		z = features_obs.flatten('F') + noise_obs
@@ -115,13 +115,6 @@ if __name__ == '__main__':
 		error_pred = z - z_prefilter
 		
 		pose_pred_step.append(pose_mean)
-		"""
-		if not verify_covariance(covariance_obs):
-			print("Covariance error in prediction step")
-			print(i)
-			print(covariance_obs)
-			sys.exit()
-		"""
 
 		pose_mean, landmark_mean_obs, covariance_obs = update(pose_mean, landmark_mean_obs, covariance_obs, z, noise_obs_cov, K_s, imu_flip @ cam_T_imu)
 
@@ -130,13 +123,6 @@ if __name__ == '__main__':
 		error_update = z - z_postfilter
 
 		pose_update_step.append(pose_mean)
-		"""
-		if not verify_covariance(covariance_obs):
-			print("Covariance error in update step")
-			print(i)
-			print(covariance_obs)
-			sys.exit()
-		"""
 		
 		for j in range(observed.shape[0]):
 			landmark_mean[observed[j]*3:(observed[j]+1)*3] = landmark_mean_obs[j*3:(j+1)*3]
@@ -173,12 +159,6 @@ if __name__ == '__main__':
 	pose_update_step = np.transpose(pose_update_step, (1, 2, 0))
 
 	landmarks = landmark_mean.reshape((-1, 3))
-
-	plt.plot(Error_obs, label="Average relative error in innovation")
-	plt.plot(Error_pred, label="Average realtive error after prediction step")
-	plt.title("Average relative error")
-	plt.show()
-	plt.close()
 
 	plot(pose_pred_step, landmark_og, "Trajectory after prediction step", "Trajectory after prediction step with landmark mapping update")
 
